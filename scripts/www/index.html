@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -91,6 +91,40 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
+        .login-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #E0E0E0;
+        }
+
+        .login-tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            color: #999;
+            font-size: 16px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .login-tab.active {
+            color: var(--red-primary);
+            font-weight: bold;
+        }
+
+        .login-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background: var(--red-primary);
+            border-radius: 2px;
+        }
+
         .input-group {
             margin-bottom: 20px;
         }
@@ -140,6 +174,20 @@
 
         .code-btn:disabled {
             background: #ccc;
+        }
+
+        .password-toggle {
+            padding: 0 15px;
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .password-toggle:hover {
+            color: var(--red-primary);
         }
 
         .login-btn {
@@ -1655,6 +1703,10 @@
                 <p>红色文化传承平台</p>
             </div>
             <div class="login-form">
+                <div class="login-tabs">
+                    <div class="login-tab active" data-type="code" onclick="switchLoginType('code')">验证码登录</div>
+                    <div class="login-tab" data-type="password" onclick="switchLoginType('password')">密码登录</div>
+                </div>
                 <div class="input-group">
                     <label>手机号</label>
                     <div class="input-wrapper">
@@ -1662,12 +1714,22 @@
                         <input type="tel" id="phoneInput" placeholder="请输入手机号" maxlength="11">
                     </div>
                 </div>
-                <div class="input-group">
+                <div class="input-group" id="codeInputGroup">
                     <label>验证码</label>
                     <div class="input-wrapper">
                         <i class="ri-shield-keyhole-line"></i>
                         <input type="text" id="codeInput" placeholder="请输入验证码" maxlength="6">
                         <button class="code-btn" id="codeBtn" onclick="sendCode()">获取验证码</button>
+                    </div>
+                </div>
+                <div class="input-group" id="passwordInputGroup" style="display: none;">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <i class="ri-lock-line"></i>
+                        <input type="password" id="passwordInput" placeholder="请输入密码">
+                        <button class="password-toggle" id="passwordToggle" onclick="togglePassword()">
+                            <i class="ri-eye-off-line"></i>
+                        </button>
                     </div>
                 </div>
                 <button class="login-btn" onclick="login()">
@@ -1718,10 +1780,10 @@
                                 <i class="ri-car-line"></i><br>驾车
                             </button>
                             <button class="route-mode" data-mode="transfer">
-                                <i class="ri-bus-line"></i><br>公交
+                                <i class="ri-bus-line"></i><br>远距离
                             </button>
                             <button class="route-mode" data-mode="walking">
-                                <i class="ri-walk-line"></i><br>步行
+                                <i class="ri-walk-line"></i><br>近距离
                             </button>
                         </div>
                         <div class="route-info">
@@ -2573,11 +2635,11 @@
                         </div>
                         <div class="site-nav-mode" data-mode="transfer" onclick="selectSiteNavMode('transfer')">
                             <i class="ri-bus-line"></i>
-                            <span>公交</span>
+                            <span>远距离</span>
                         </div>
                         <div class="site-nav-mode" data-mode="walking" onclick="selectSiteNavMode('walking')">
                             <i class="ri-walk-line"></i>
-                            <span>步行</span>
+                            <span>近距离</span>
                         </div>
                     </div>
                 </div>
@@ -3358,6 +3420,44 @@
             });
         }
 
+        let currentLoginType = 'code';
+
+        function switchLoginType(type) {
+            currentLoginType = type;
+            const tabs = document.querySelectorAll('.login-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-type') === type) {
+                    tab.classList.add('active');
+                }
+            });
+
+            const codeGroup = document.getElementById('codeInputGroup');
+            const passwordGroup = document.getElementById('passwordInputGroup');
+
+            if (type === 'code') {
+                codeGroup.style.display = 'block';
+                passwordGroup.style.display = 'none';
+            } else {
+                codeGroup.style.display = 'none';
+                passwordGroup.style.display = 'block';
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleBtn = document.getElementById('passwordToggle');
+            const icon = toggleBtn.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'ri-eye-line';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'ri-eye-off-line';
+            }
+        }
+
         function sendCode() {
             const btn = document.getElementById('codeBtn');
             let countdown = 60;
@@ -3375,15 +3475,28 @@
 
         function login() {
             const phone = document.getElementById('phoneInput').value;
-            const code = document.getElementById('codeInput').value;
             
             if (!phone || phone.length !== 11) {
                 alert('请输入正确的手机号');
                 return;
             }
-            if (!code) {
-                alert('请输入验证码');
-                return;
+
+            if (currentLoginType === 'code') {
+                const code = document.getElementById('codeInput').value;
+                if (!code) {
+                    alert('请输入验证码');
+                    return;
+                }
+            } else {
+                const password = document.getElementById('passwordInput').value;
+                if (!password) {
+                    alert('请输入密码');
+                    return;
+                }
+                if (password.length < 6) {
+                    alert('密码长度不能少于6位');
+                    return;
+                }
             }
             
             enterApp();
@@ -4651,7 +4764,7 @@
             
             alert('正在启动导航到' + currentSite.name + '（' + 
                 (currentSiteNavMode === 'driving' ? '驾车' : 
-                 currentSiteNavMode === 'transfer' ? '公交' : '步行') + 
+                 currentSiteNavMode === 'transfer' ? '远距离' : '近距离') + 
                 '）');
             
             // 切换回地图页面并规划路线
