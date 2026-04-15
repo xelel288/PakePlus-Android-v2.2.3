@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1858,20 +1858,6 @@
                             <button class="route-mode" data-mode="walking">
                                 <i class="ri-walk-line"></i><br>近距离
                             </button>
-                        </div>
-                        <div class="route-info">
-                            <div class="route-info-item">
-                                <div class="route-info-value" id="routeTime">25分钟</div>
-                                <div class="route-info-label">预计时间</div>
-                            </div>
-                            <div class="route-info-item">
-                                <div class="route-info-value" id="routeDistance">12.5公里</div>
-                                <div class="route-info-label">路程距离</div>
-                            </div>
-                            <div class="route-info-item">
-                                <div class="route-info-value" id="routeLight">8个</div>
-                                <div class="route-info-label">红绿灯</div>
-                            </div>
                         </div>
                         <button class="start-nav-btn" onclick="startNavigation()">
                             <i class="ri-navigation-line"></i> 开始AI导航
@@ -3758,7 +3744,7 @@
                             <button onclick="openSiteDetail(${site.id})" style="flex:1; padding:8px; background:#C41E3A; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px;">
                                 <i class="ri-information-line"></i> 查看详情
                             </button>
-                            <button onclick="planRoute(${site.lng}, ${site.lat}, '${site.name}')" style="flex:1; padding:8px; background:#FFF8F0; color:#C41E3A; border:none; border-radius:6px; cursor:pointer; font-size:13px;">
+                            <button onclick="planRoute(${site.id})" style="flex:1; padding:8px; background:#FFF8F0; color:#C41E3A; border:none; border-radius:6px; cursor:pointer; font-size:13px;">
                                 <i class="ri-navigation-line"></i> 规划路线
                             </button>
                         </div>
@@ -3883,7 +3869,7 @@
                         <button class="popup-btn detail" onclick="openSiteDetail(${site.id})" style="flex:1; padding:8px; background:#FFF8F0; color:#C41E3A; border:none; border-radius:6px; cursor:pointer; font-size:13px;">
                             <i class="ri-information-line"></i> 查看详情
                         </button>
-                        <button class="popup-btn navi" onclick="planRoute(${site.lng}, ${site.lat}, '${site.name}')">
+                        <button class="popup-btn navi" onclick="planRoute(${site.id})">
                             <i class="ri-navigation-line"></i> 导航
                         </button>
                         <button class="popup-btn fav" onclick="favoritesite('${site.name}')">
@@ -3912,9 +3898,14 @@
             }
         }
 
-        function planRoute(lng, lat, name) {
-            console.log('开始规划路线到:', name, lng, lat);
-            selectedSite = { lng, lat, name };
+        function planRoute(siteId) {
+            console.log('开始规划路线，景点ID:', siteId);
+            // 根据ID找到完整的景点数据
+            selectedSite = redSites.find(s => s.id === siteId);
+            if (!selectedSite) {
+                console.error('未找到景点数据，ID:', siteId);
+                return;
+            }
             document.getElementById('routePanel').classList.add('show');
             
             if (!currentLocation) {
@@ -4002,115 +3993,13 @@
         }
 
         function updateRouteInfo(results) {
-            try {
-                if (results && results.getNumPlans && results.getNumPlans() > 0) {
-                    const plan = results.getPlan(0);
-                    if (plan) {
-                        const distance = plan.getDistance();
-                        const duration = plan.getDuration();
-                        
-                        if (distance !== undefined) {
-                            let distanceText;
-                            if (distance < 1000) {
-                                distanceText = distance + '米';
-                            } else {
-                                distanceText = (distance / 1000).toFixed(1) + '公里';
-                            }
-                            document.getElementById('routeDistance').textContent = distanceText;
-                        }
-                        
-                        if (duration !== undefined) {
-                            let durationText;
-                            const minutes = Math.ceil(duration / 60);
-                            if (minutes < 60) {
-                                durationText = minutes + '分钟';
-                            } else {
-                                const hours = Math.floor(minutes / 60);
-                                const mins = minutes % 60;
-                                durationText = hours + '小时' + (mins > 0 ? mins + '分钟' : '');
-                            }
-                            document.getElementById('routeTime').textContent = durationText;
-                        }
-                        
-                        let lightCount = 0;
-                        if (currentRouteMode === 'driving' && plan.getNumRoutes) {
-                            try {
-                                const route = plan.getRoute(0);
-                                if (route && route.getNumSteps) {
-                                    for (let i = 0; i < route.getNumSteps(); i++) {
-                                        const step = route.getStep(i);
-                                        if (step && step.getDescription) {
-                                            const desc = step.getDescription();
-                                            if (desc && desc.includes('红绿灯')) {
-                                                lightCount++;
-                                            }
-                                        }
-                                    }
-                                }
-                            } catch (e) {
-                                console.log('获取路线步骤失败:', e);
-                            }
-                        }
-                        if (lightCount === 0) {
-                            lightCount = Math.floor(Math.random() * 10) + 3;
-                        }
-                        document.getElementById('routeLight').textContent = lightCount + '个';
-                        
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.log('处理路线结果失败:', e);
-            }
-            
+            // 简化处理，直接调用模拟路线更新
             updateMockRouteInfo();
         }
 
         function updateMockRouteInfo() {
-            // 如果是南昌起义景点（ID: 2），使用固定数值
-            if (selectedSite && selectedSite.id === 2) {
-                document.getElementById('routeTime').textContent = '25分钟';
-                document.getElementById('routeDistance').textContent = '12.5公里';
-                document.getElementById('routeLight').textContent = '8个';
-                return;
-            }
-
-            const startPoint = currentLocation || map.getCenter();
-            const endPoint = new BMap.Point(selectedSite.lng, selectedSite.lat);
-            const distance = map.getDistance(startPoint, endPoint);
-            
-            let distanceText, durationText;
-            let speed;
-            
-            if (currentRouteMode === 'driving') {
-                speed = 40;
-            } else if (currentRouteMode === 'transfer') {
-                speed = 25;
-            } else {
-                speed = 5;
-            }
-            
-            const distanceKm = distance / 1000;
-            const durationHours = distanceKm / speed;
-            const durationMinutes = Math.ceil(durationHours * 60);
-            
-            if (distance < 1000) {
-                distanceText = Math.round(distance) + '米';
-            } else {
-                distanceText = distanceKm.toFixed(1) + '公里';
-            }
-            
-            if (durationMinutes < 60) {
-                durationText = durationMinutes + '分钟';
-            } else {
-                const hours = Math.floor(durationMinutes / 60);
-                const mins = durationMinutes % 60;
-                durationText = hours + '小时' + (mins > 0 ? mins + '分钟' : '');
-            }
-            
-            document.getElementById('routeDistance').textContent = distanceText;
-            document.getElementById('routeTime').textContent = durationText;
-            document.getElementById('routeLight').textContent = (Math.floor(Math.random() * 10) + 3) + '个';
+            // 路线已经通过百度地图API在地图上渲染，这里只需要确保路线规划功能正常
+            // 不需要更新任何已删除的显示元素
         }
 
         let navigationWatchId = null;
@@ -4936,7 +4825,7 @@
                 '）');
             
             // 切换回地图页面并规划路线
-            planRoute(currentSite.lng, currentSite.lat, currentSite.name);
+            planRoute(currentSite.id);
         }
 
         function goBackSite() {
